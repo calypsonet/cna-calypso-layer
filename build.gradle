@@ -1,0 +1,139 @@
+apply plugin: "java"
+apply plugin: "maven"
+apply plugin: "com.diffplug.spotless"
+
+///////////////////////////////////////////////////////////////////////////////
+// CONFIGURATION
+///////////////////////////////////////////////////////////////////////////////
+
+group = groupId
+archivesBaseName = artifactId
+sourceCompatibility = javaSourceLevel
+
+// If your build script needs to use external libraries, you can add them to the script’s classpath in the
+// build script itself.
+// You do this using the buildscript() method, passing in a block which declares the build script classpath.
+buildscript {
+    // Repositories where to find dependencies needed by the build process
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.diffplug.spotless:spotless-plugin-gradle:5.10.0"
+    }
+}
+
+// Repositories where to find dependencies needed by the project
+repositories {
+    mavenLocal()
+    //use a mirror of maven_central to speed up CI build
+    maven {
+        url "https://repo.eclipse.org/service/local/repositories/maven_central/content"
+    }
+    //to import keyple snapshots
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+    }
+    //to import keyple releases
+    maven {
+        url "https://oss.sonatype.org/content/repositories/releases"
+    }
+    google()
+    jcenter()
+    mavenCentral()
+}
+
+// Configures the dependency configurations for this project.
+configurations {
+    all {
+        // Defines the strategies around dependency resolution.
+        // For example, forcing certain dependency versions, substitutions, conflict resolutions or snapshot timeouts.
+        resolutionStrategy {
+            // check for updates every build
+            cacheChangingModulesFor 0, "seconds"
+        }
+    }
+    // configuration that holds jars to include in the jar
+    extraLibs
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// CUSTOM TASKS
+///////////////////////////////////////////////////////////////////////////////
+
+// Copy license file from root folder to each generated artifact
+task copyLicenceFile(type: Copy) {
+    from file("${projectDir}/LICENSE")
+    into file("${buildDir}/resources/main/META-INF/")
+}
+
+// Copy notice file from root folder to each generated artifact
+task copyNoticeFile(type: Copy) {
+    from file("${projectDir}/NOTICE.md")
+    into file("${buildDir}/resources/main/META-INF/")
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// DEFAULT TASKS
+///////////////////////////////////////////////////////////////////////////////
+
+// additional actions before compiling classes
+
+// spotless plugin task
+spotless {
+    // java files format
+    java {
+        target "src/**/*.java"
+        importOrder "java", "javax", "org", "com", ""
+        removeUnusedImports()
+        googleJavaFormat()
+    }
+    // gradle files format
+    groovyGradle {
+        target "*.gradle" // default target of groovyGradle
+        greclipse()
+        indentWithSpaces()
+    }
+}
+
+classes {
+    dependsOn copyLicenceFile, copyNoticeFile
+}
+
+jar {
+    manifest {
+        attributes("Implementation-Title": project.description,
+        "Implementation-Version": project.version,
+        "Main-Class": "org.calypsonet.certification.calypso.Main")
+    }
+    from sourceSets.test.output
+    from {
+        configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// PROJECT DEPENDENCIES
+///////////////////////////////////////////////////////////////////////////////
+
+dependencies {
+
+    // https://mvnrepository.com/artifact/junit/junit
+    extraLibs "junit:junit:${junit_version}"
+
+    // https://search.maven.org/artifact/org.assertj/assertj-core/2.9.1/bundle
+    extraLibs "org.assertj:assertj-core:${assertj_version}"
+
+    // https://mvnrepository.com/artifact/org.mockito/mockito-core
+    extraLibs "org.mockito:mockito-core:${mockitocore_version}"
+
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    extraLibs "org.slf4j:slf4j-api:${slf4japi_version}"
+
+    // add slf4j simple logger implementation
+    extraLibs "org.slf4j:slf4j-simple:${slf4jsimple_version}"
+
+    configurations.compile.extendsFrom(configurations.extraLibs)
+}
