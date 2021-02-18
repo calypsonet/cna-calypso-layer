@@ -1,1 +1,1 @@
-# cna-calypso-layer
+# Repository for the "Calypso Layer" Certification Test Project
