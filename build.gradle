@@ -148,7 +148,7 @@ dependencies {
     extraLibs "org.apache.ant:ant-junit:1.10.9"
 
 
-    extraLibs gradleTestKit()
+    // extraLibs gradleTestKit()
 
     extraLibs "com.google.code.gson:gson:2.8.5"
 

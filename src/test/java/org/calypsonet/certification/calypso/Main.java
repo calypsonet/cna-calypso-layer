@@ -1,15 +1,13 @@
 package org.calypsonet.certification.calypso;
 
-import java.io.*;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import java.io.*;
 import junit.framework.Test;
 import junit.framework.TestResult;
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitResultFormatter;
 import org.apache.tools.ant.taskdefs.optional.junit.JUnitTest;
 import org.apache.tools.ant.taskdefs.optional.junit.XMLJUnitResultFormatter;
-import org.gradle.testkit.runner.GradleRunner;
 import org.junit.internal.TextListener;
 import org.junit.runner.Description;
 import org.junit.runner.JUnitCore;
@@ -42,45 +40,46 @@ public class Main {
     // JUnitCore.main(FirstTestSuite.class.getName());
     JUnitCore jUnitCore = new JUnitCore();
     jUnitCore.addListener(new TextListener(System.out));
-    jUnitCore.addListener(new JUnitResultFormatterAsRunListener(new XMLJUnitResultFormatter()) {
-      @Override
-      public void testStarted(Description description) throws Exception {
-        formatter.setOutput(new FileOutputStream(new File(reportDir,"TEST-"+description.getDisplayName()+".xml")));
-        super.testStarted(description);
-      }
-/*
-      @Override
-      public void testSuiteStarted(Description description) throws Exception {
-        formatter.setOutput(new FileOutputStream(new File(reportDir,"TEST-"+description.getDisplayName()+".xml")));
-        super.testSuiteStarted(description);
-      }
+    jUnitCore.addListener(
+        new JUnitResultFormatterAsRunListener(new XMLJUnitResultFormatter()) {
+          @Override
+          public void testStarted(Description description) throws Exception {
+            formatter.setOutput(
+                new FileOutputStream(
+                    new File(reportDir, "TEST-" + description.getDisplayName() + ".xml")));
+            super.testStarted(description);
+          }
+          /*
+          @Override
+          public void testSuiteStarted(Description description) throws Exception {
+            formatter.setOutput(new FileOutputStream(new File(reportDir,"TEST-"+description.getDisplayName()+".xml")));
+            super.testSuiteStarted(description);
+          }
 
-      @Override
-      public void testSuiteFinished(Description description) throws Exception {
-        formatter.setOutput(new FileOutputStream(new File(reportDir,"TEST-"+description.getDisplayName()+".xml")));
-        super.testSuiteFinished(description);
-      }*/
-    });
+          @Override
+          public void testSuiteFinished(Description description) throws Exception {
+            formatter.setOutput(new FileOutputStream(new File(reportDir,"TEST-"+description.getDisplayName()+".xml")));
+            super.testSuiteFinished(description);
+          }*/
+        });
 
-
-    //jUnitCore.addListener(new TextListener(System.out));
+    // jUnitCore.addListener(new TextListener(System.out));
     Result result = jUnitCore.run(FirstTestSuite.class);
 
     GsonBuilder gsonBuilder = new GsonBuilder();
     Gson gson = gsonBuilder.create();
     System.out.println(gson.toJson(result));
-/*
-    String filePath = ".";
-    String reportFileName = "myReport.htm";
-    StringBuffer myContent =
-        getResultContent(
-            result,
-            10); // Size represents number of AllEJBJunitTests class, suppose if you have 5 EJB
-    // classes then size is 5.
-    writeReportFile(filePath + "/" + reportFileName, myContent);
-  */
+    /*
+      String filePath = ".";
+      String reportFileName = "myReport.htm";
+      StringBuffer myContent =
+          getResultContent(
+              result,
+              10); // Size represents number of AllEJBJunitTests class, suppose if you have 5 EJB
+      // classes then size is 5.
+      writeReportFile(filePath + "/" + reportFileName, myContent);
+    */
   }
-
 
   private static StringBuffer getResultContent(Result result, int numberOfTestFiles) {
     int numberOfTest = result.getRunCount();
@@ -138,16 +137,16 @@ public class Main {
   }
 
   /**
-   * Adopts {@link JUnitResultFormatter} into {@link RunListener},
-   * and also captures stdout/stderr by intercepting the likes of {@link System#out}.
+   * Adopts {@link JUnitResultFormatter} into {@link RunListener}, and also captures stdout/stderr
+   * by intercepting the likes of {@link System#out}.
    *
-   * Because Ant JUnit formatter uses one stderr/stdout per one test suite,
-   * we capture each test case into a separate report file.
+   * <p>Because Ant JUnit formatter uses one stderr/stdout per one test suite, we capture each test
+   * case into a separate report file.
    */
   public static class JUnitResultFormatterAsRunListener extends RunListener {
     protected final JUnitResultFormatter formatter;
-    private ByteArrayOutputStream stdout,stderr;
-    private PrintStream oldStdout,oldStderr;
+    private ByteArrayOutputStream stdout, stderr;
+    private PrintStream oldStdout, oldStderr;
     private int problem;
     private long startTime;
 
@@ -156,12 +155,10 @@ public class Main {
     }
 
     @Override
-    public void testRunStarted(Description description) throws Exception {
-    }
+    public void testRunStarted(Description description) throws Exception {}
 
     @Override
-    public void testRunFinished(Result result) throws Exception {
-    }
+    public void testRunFinished(Result result) throws Exception {}
 
     @Override
     public void testStarted(Description description) throws Exception {
@@ -188,8 +185,8 @@ public class Main {
       formatter.endTest(new DescriptionAsTest(description));
 
       JUnitTest suite = new JUnitTest(description.getDisplayName());
-      suite.setCounts(1,problem,0);
-      suite.setRunTime(System.currentTimeMillis()-startTime);
+      suite.setCounts(1, problem, 0);
+      suite.setRunTime(System.currentTimeMillis() - startTime);
       formatter.endTestSuite(suite);
     }
 
@@ -210,9 +207,7 @@ public class Main {
     }
   }
 
-  /**
-   * Wraps {@link Description} into {@link Test} enough to fake {@link JUnitResultFormatter}.
-   */
+  /** Wraps {@link Description} into {@link Test} enough to fake {@link JUnitResultFormatter}. */
   public static class DescriptionAsTest implements Test {
     private final Description description;
 
@@ -228,9 +223,7 @@ public class Main {
       throw new UnsupportedOperationException();
     }
 
-    /**
-     * {@link JUnitResultFormatter} determines the test name by reflection.
-     */
+    /** {@link JUnitResultFormatter} determines the test name by reflection. */
     public String getName() {
       return description.getDisplayName();
     }
