@@ -6,7 +6,7 @@ import org.eclipse.keyple.plugin.pcsc.PcscPluginFactory;
 import org.eclipse.keyple.plugin.stub.StubPluginFactory;
 import org.junit.*;
 
-public class FirstTest {
+public class SecondTest {
 
   private static PluginFactory pluginFactory;
 
@@ -53,12 +53,12 @@ public class FirstTest {
   public static void afterClass() throws Exception {}
 
   @Test
-  public void test1() {
+  public void test3() {
     Assertions.assertThat(true).isTrue();
   }
 
   @Test
-  public void test2() {
-    Assertions.assertThat(false).isTrue();
+  public void test4() {
+    Assertions.assertThat(true).isTrue();
   }
 }

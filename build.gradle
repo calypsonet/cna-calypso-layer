@@ -120,6 +120,15 @@ jar {
 
 dependencies {
 
+    // KEYPLE DEPENDENCIES
+
+    extraLibs "org.eclipse.keyple:keyple-java-core:${keyple_java_core_version}"
+    extraLibs "org.eclipse.keyple:keyple-java-calypso:${keyple_java_calypso_version}"
+    extraLibs "org.eclipse.keyple:keyple-java-plugin-stub:${keyple_java_plugin_stub_version}"
+    extraLibs "org.eclipse.keyple:keyple-java-plugin-pcsc:${keyple_java_plugin_pcsc_version}"
+
+    // EXTERNAL DEPENDENCIES
+
     // https://mvnrepository.com/artifact/junit/junit
     extraLibs "junit:junit:${junit_version}"
 
@@ -132,8 +141,16 @@ dependencies {
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
     extraLibs "org.slf4j:slf4j-api:${slf4japi_version}"
 
-    // add slf4j simple logger implementation
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
     extraLibs "org.slf4j:slf4j-simple:${slf4jsimple_version}"
+
+    // https://mvnrepository.com/artifact/org.apache.ant/ant-junit
+    extraLibs "org.apache.ant:ant-junit:1.10.9"
+
+
+    extraLibs gradleTestKit()
+
+    extraLibs "com.google.code.gson:gson:2.8.5"
 
     configurations.compile.extendsFrom(configurations.extraLibs)
 }
