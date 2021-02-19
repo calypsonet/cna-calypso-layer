@@ -24,7 +24,7 @@ public class SecondTest {
       pluginFactory = new PcscPluginFactory(null, null);
     } else {
       pluginFactory = new PcscPluginFactory(null, null);
-      //throw new IllegalStateException("Bad plugin name : " + pluginName);
+      // throw new IllegalStateException("Bad plugin name : " + pluginName);
     }
   }
 
