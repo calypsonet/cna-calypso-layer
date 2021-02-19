@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class FirstTest {
+
   private static final Logger logger = LoggerFactory.getLogger(FirstTest.class);
   private static SmartCardService smartCardService;
   private static Plugin plugin;

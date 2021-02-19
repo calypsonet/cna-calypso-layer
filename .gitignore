@@ -5,6 +5,7 @@
 gen/
 out/
 release/
+*.log
 
 # Gradle
 .gradle/

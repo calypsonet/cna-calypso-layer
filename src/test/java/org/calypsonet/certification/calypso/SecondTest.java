@@ -55,10 +55,14 @@ public class SecondTest {
   @Test
   public void test3() {
     Assertions.assertThat(true).isTrue();
+    Assertions.assertThat(false).isTrue();
   }
 
   @Test
   public void test4() {
     Assertions.assertThat(true).isTrue();
   }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void test5() {}
 }

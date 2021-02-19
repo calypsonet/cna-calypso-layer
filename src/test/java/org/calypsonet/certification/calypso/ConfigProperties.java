@@ -5,19 +5,14 @@ import java.util.Properties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/** Config properties extracted from the 'config.properties' file. */
 public final class ConfigProperties {
 
   private static final Logger logger = LoggerFactory.getLogger(ConfigProperties.class);
   private static final Properties properties = new Properties();
 
-  /**
-   * Loads properties from external config file.
-   *
-   * @throws IOException
-   */
   static {
     logger.info("Load file 'config.properties'");
-
     try {
       InputStream inputStream;
       try {
@@ -40,6 +35,7 @@ public final class ConfigProperties {
   // Properties keys values
   public static final String PLUGIN_NAME_STUB = "stub";
   public static final String PLUGIN_NAME_PCSC = "pcsc";
+
   public static final String READER_TYPE_CONTACT = "contact";
   public static final String READER_TYPE_CONTACTLESS = "contactless";
 
