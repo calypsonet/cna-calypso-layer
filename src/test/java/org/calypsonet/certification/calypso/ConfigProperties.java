@@ -10,6 +10,33 @@ public final class ConfigProperties {
   private static final Logger logger = LoggerFactory.getLogger(ConfigProperties.class);
   private static final Properties properties = new Properties();
 
+  /**
+   * Loads properties from external config file.
+   *
+   * @throws IOException
+   */
+  static {
+    logger.info("Load file 'config.properties'");
+
+    try {
+      InputStream inputStream;
+      try {
+        inputStream = new FileInputStream("config.properties");
+
+      } catch (FileNotFoundException e) {
+        inputStream =
+            Thread.currentThread().getContextClassLoader().getResourceAsStream("config.properties");
+      }
+      try {
+        properties.load(inputStream);
+      } finally {
+        inputStream.close();
+      }
+    } catch (Exception e) {
+      logger.error("Error: {}", e.getMessage(), e);
+    }
+  }
+
   // Properties keys values
   public static final String PLUGIN_NAME_STUB = "stub";
   public static final String PLUGIN_NAME_PCSC = "pcsc";
@@ -42,18 +69,6 @@ public final class ConfigProperties {
     public String getKeyName() {
       return keyName;
     }
-  }
-
-  /**
-   * Loads properties from external config file.
-   *
-   * @throws IOException
-   */
-  public static void loadProperties() throws IOException {
-    logger.info("Load file 'config.properties'");
-    InputStream inputStream = new FileInputStream("config.properties");
-    properties.load(inputStream);
-    inputStream.close();
   }
 
   /**

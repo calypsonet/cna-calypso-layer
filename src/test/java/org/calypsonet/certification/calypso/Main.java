@@ -29,8 +29,6 @@ public class Main {
    */
   public static void main(String[] args) throws IOException {
 
-    ConfigProperties.loadProperties();
-
     final File reportDir = new File(".");
 
     logger.info(
