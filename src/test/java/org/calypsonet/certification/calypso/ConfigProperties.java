@@ -44,10 +44,10 @@ public final class ConfigProperties {
   /** Properties keys. */
   public enum Key {
     PLUGIN_NAME("plugin.name"),
-    READER_1_NAME("reader.1.name"),
-    READER_1_TYPE("reader.1.type"),
-    READER_2_NAME("reader.2.name"),
-    READER_2_TYPE("reader.2.type"),
+    PO_READER_1_NAME("reader.po.1.name"),
+    PO_READER_1_TYPE("reader.po.1.type"),
+    SAM_READER_1_NAME("reader.sam.1.name"),
+    SAM_READER_1_TYPE("reader.sam.1.type"),
     SAM_1_REVISION("sam.1.revision"),
     SAM_2_REVISION("sam.2.revision"),
     CARD_1_PROTOCOL("card.1.protocol"),
