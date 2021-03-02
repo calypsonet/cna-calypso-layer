@@ -1,4 +1,4 @@
-package org.calypsonet.certification;
+package org.calypsonet.certification.procedures;
 
 public class ProcedureFactory {
 
@@ -9,7 +9,7 @@ public class ProcedureFactory {
         (Class<Procedure>)
             Thread.currentThread()
                 .getContextClassLoader()
-                .loadClass("org.calypsonet.certification.ProcedureAdapter");
+                .loadClass("org.calypsonet.certification.procedures.ProcedureAdapter");
     return procedureClass.newInstance();
   }
 }

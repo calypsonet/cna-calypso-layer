@@ -46,15 +46,16 @@ public final class ConfigProperties {
     PLUGIN_NAME("plugin.name"),
     PO_READER_1_NAME("reader.po.1.name"),
     PO_READER_1_TYPE("reader.po.1.type"),
+    PO_READER_2_NAME("reader.po.2.name"),
+    PO_READER_2_TYPE("reader.po.2.type"),
     SAM_READER_1_NAME("reader.sam.1.name"),
-    SAM_READER_1_TYPE("reader.sam.1.type"),
     SAM_1_REVISION("sam.1.revision"),
-    SAM_2_REVISION("sam.2.revision"),
-    CARD_1_PROTOCOL("card.1.protocol"),
-    CARD_1_AID("card.1.aid"),
-    CARD_1_DFNAME("card.1.dfname"),
-    CARD_2_PROTOCOL("card.2.protocol"),
-    ;
+    PO_1_PROTOCOL("po.1.protocol"),
+    PO_1_DFNAME("po.1.dfname"),
+    PO_1_SERIALNUMBER("po.1.serialnumber"),
+    PO_1_STARTUPINFO("po.1.startupinfo"),
+    PO_2_PROTOCOL("po.2.protocol"),
+    PO_2_DFNAME("po.2.dfname");
 
     private final String keyName;
 
