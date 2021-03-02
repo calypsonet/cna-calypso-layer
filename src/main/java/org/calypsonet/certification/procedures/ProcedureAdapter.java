@@ -1,7 +1,10 @@
-package org.calypsonet.certification;
+package org.calypsonet.certification.procedures;
 
+import org.calypsonet.certification.stub.StubCalypsoClassic;
+import org.calypsonet.certification.stub.StubSamCalypsoClassic;
 import org.eclipse.keyple.calypso.command.sam.SamRevision;
 import org.eclipse.keyple.calypso.transaction.*;
+import org.eclipse.keyple.core.card.message.*;
 import org.eclipse.keyple.core.card.selection.CardResource;
 import org.eclipse.keyple.core.card.selection.CardSelectionsResult;
 import org.eclipse.keyple.core.card.selection.CardSelectionsService;
@@ -12,11 +15,17 @@ import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.SmartCardService;
 import org.eclipse.keyple.core.service.util.ContactCardCommonProtocols;
 import org.eclipse.keyple.core.service.util.ContactlessCardCommonProtocols;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.eclipse.keyple.plugin.pcsc.PcscPluginFactory;
 import org.eclipse.keyple.plugin.pcsc.PcscReader;
 import org.eclipse.keyple.plugin.pcsc.PcscSupportedContactProtocols;
 import org.eclipse.keyple.plugin.pcsc.PcscSupportedContactlessProtocols;
 import org.eclipse.keyple.plugin.stub.StubPluginFactory;
+import org.eclipse.keyple.plugin.stub.StubReader;
+import org.eclipse.keyple.plugin.stub.StubSmartCard;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ProcedureAdapter implements Procedure {
 
@@ -28,6 +37,7 @@ public class ProcedureAdapter implements Procedure {
   private CalypsoPo calypsoPo;
   private CardResource<CalypsoPo> poResource;
   private PoTransaction poTransaction;
+  private CardResponse cardResponse;
 
   @Override
   public void initializeContext(String... pluginsNames) {
@@ -68,11 +78,16 @@ public class ProcedureAdapter implements Procedure {
         ((PcscReader) poReader).setIsoProtocol(PcscReader.IsoProtocol.T1);
       }
     } else {
-      // Get and configure a contactless reader
+      // Get and configure a contact reader
       if (poReader instanceof PcscReader) {
         ((PcscReader) poReader).setContactless(false);
         ((PcscReader) poReader).setIsoProtocol(PcscReader.IsoProtocol.T0);
       }
+    }
+
+    if (poReader instanceof StubReader){
+      // Create 'virtual' Calypso card
+      StubSmartCard stubPo = new StubCalypsoClassic();
     }
 
     // Activate PO protocols
@@ -100,6 +115,11 @@ public class ProcedureAdapter implements Procedure {
     if (samReader instanceof PcscReader) {
       ((PcscReader) samReader).setContactless(false);
       ((PcscReader) samReader).setIsoProtocol(PcscReader.IsoProtocol.T0);
+    }
+
+    if (poReader instanceof StubReader){
+      // Create 'virtual' SAM card
+      StubSmartCard stubSam = new StubSamCalypsoClassic();
     }
 
     SamRevision revision;
@@ -165,7 +185,13 @@ public class ProcedureAdapter implements Procedure {
   }
 
   @Override
-  public void initializeNewTransaction() {
+  public void initializePoTransaction() {
+    poTransaction =
+            new PoTransaction(new CardResource<CalypsoPo>(poReader, calypsoPo));
+  }
+
+  @Override
+  public void initializeSecurePoTransaction() {
     poTransaction =
         new PoTransaction(new CardResource<CalypsoPo>(poReader, calypsoPo), poSecuritySettings);
   }
@@ -208,4 +234,30 @@ public class ProcedureAdapter implements Procedure {
   public String getPoDfName() {
     return calypsoPo.getDfName();
   }
+
+  @Override
+  public String getPoApplicationSerialNumber() {
+    return calypsoPo.getApplicationSerialNumber();
+  }
+
+  @Override
+  public String getPoStartupInfo() {
+    return calypsoPo.getStartupInfo();
+  }
+
+  @Override
+  public void sendAPDU(String apdu, boolean case4) {
+    List<ApduRequest> apduRequestList = new ArrayList<ApduRequest>();
+    apduRequestList.add(new ApduRequest(ByteArrayUtil.fromHex(apdu), case4));
+    CardRequest cardRequest = new CardRequest(apduRequestList);
+    System.out.println(cardRequest.getApduRequests().toString());
+    cardResponse =
+            ((ProxyReader) poReader).transmitCardRequest(cardRequest, ChannelControl.CLOSE_AFTER);
+  }
+
+  @Override
+  public boolean isApduSuccessful() {
+    return cardResponse.getApduResponses().get(0).isSuccessful();
+  }
+
 }

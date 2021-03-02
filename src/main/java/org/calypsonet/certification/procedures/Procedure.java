@@ -1,4 +1,4 @@
-package org.calypsonet.certification;
+package org.calypsonet.certification.procedures;
 
 public interface Procedure {
 
@@ -12,7 +12,9 @@ public interface Procedure {
 
   void selectPo(String aid);
 
-  void initializeNewTransaction();
+  void initializePoTransaction();
+
+  void initializeSecurePoTransaction();
 
   void prepareReadRecord(int sfi, int recordNumber);
 
@@ -23,4 +25,12 @@ public interface Procedure {
   void processClosing();
 
   String getPoDfName();
+
+  String getPoApplicationSerialNumber();
+
+  String getPoStartupInfo();
+
+  void sendAPDU(String apdu, boolean case4);
+
+  boolean isApduSuccessful();
 }

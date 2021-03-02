@@ -1,4 +1,4 @@
-package org.calypsonet.certification;
+package org.calypsonet.certification.procedures;
 
 public enum SessionAccessLevel {
 
