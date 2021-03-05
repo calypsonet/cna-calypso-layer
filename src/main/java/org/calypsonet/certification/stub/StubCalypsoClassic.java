@@ -44,9 +44,7 @@ public final class StubCalypsoClassic extends StubSmartCard {
         "008A0B3904C1C2C3C400",
         "0308306C00307E1D24B928480800000606F0001200000000000000000000000000000000009000");
     /* Open Secure Session Compatibility mode */
-    addHexCommand(
-            "008A8100040102030405",
-            "0308306C009000");
+    addHexCommand("008A8100040102030405", "0308306C009000");
     /* Read Records */
     addHexCommand("00B2014400", "00112233445566778899AABBCCDDEEFF00112233445566778899AABBCC9000");
     /* Read Records */

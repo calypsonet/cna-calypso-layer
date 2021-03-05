@@ -1,26 +1,21 @@
 package org.calypsonet.certification.calypso;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.calypsonet.certification.procedures.Procedure;
 import org.calypsonet.certification.procedures.ProcedureFactory;
-import org.calypsonet.certification.procedures.SessionAccessLevel;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CL116Test {
+public class RL22Test {
 
-  private static final Logger logger = LoggerFactory.getLogger(CL116Test.class);
+  private static final Logger logger = LoggerFactory.getLogger(RL22Test.class);
   private static Procedure procedure;
   private static String pluginName;
   private static String poReaderName;
   private static String poReaderType;
   private static boolean isPoReaderContactless;
-  private static String samReaderName;
-  private static String poProtocol1;
-  private static String poDfName1;
-  private static String samRevision1;
+  private static String poProtocol;
+  private static String poDfName;
 
   /**
    * Executed once before running all tests of this class.
@@ -37,10 +32,8 @@ public class CL116Test {
     pluginName = ConfigProperties.getValue(ConfigProperties.Key.PLUGIN_NAME);
     poReaderName = ConfigProperties.getValue(ConfigProperties.Key.PO_READER_1_NAME);
     poReaderType = ConfigProperties.getValue(ConfigProperties.Key.PO_READER_1_TYPE);
-    samReaderName = ConfigProperties.getValue(ConfigProperties.Key.SAM_READER_1_NAME);
-    poProtocol1 = ConfigProperties.getValue(ConfigProperties.Key.PO_1_PROTOCOL);
-    poDfName1 = ConfigProperties.getValue(ConfigProperties.Key.PO_1_DFNAME);
-    samRevision1 = ConfigProperties.getValue(ConfigProperties.Key.SAM_1_REVISION);
+    poProtocol = ConfigProperties.getValue(ConfigProperties.Key.PO_1_PROTOCOL);
+    poDfName = ConfigProperties.getValue(ConfigProperties.Key.PO_1_DFNAME);
 
     if (ConfigProperties.READER_TYPE_CONTACTLESS.equalsIgnoreCase(poReaderType)) {
       isPoReaderContactless = true;
@@ -65,10 +58,7 @@ public class CL116Test {
     procedure.initializeContext(pluginName);
 
     // Prepare PO reader
-    procedure.setupPoReader(poReaderName, isPoReaderContactless, poProtocol1);
-
-    // Prepare SAM reader
-    procedure.setupPoSecuritySettings(samReaderName, samRevision1);
+    procedure.setupPoReader(poReaderName, isPoReaderContactless, poProtocol);
   }
 
   /**
@@ -90,26 +80,28 @@ public class CL116Test {
   public static void afterClass() throws Exception {}
 
   @Test
-  public void CL_116() {
+  public void RL_22() throws Exception {
     // Display test infos
     logger.info(
-        "Ensure that Calypso Layer does not update the data of the current DF or current EF, if a new Select command sent return an error.");
+        "Ensure that the Reader Layer do not use the ISO/IEC 14443-4 PICC presence check method.");
 
-    procedure.selectPo(poDfName1);
+    procedure.activateSingleObservation(poDfName);
 
-    assertThat(procedure.getPoDfName()).isEqualToIgnoringCase(poDfName1);
+    logger.info("Present smartcard");
 
-    procedure.initializeSecurePoTransaction();
+    procedure.waitForCardInsertion();
 
-    procedure.prepareReadRecord(0x07, 1);
+    logger.info("Wait 1 second");
+    procedure.waitMilliSeconds(1000);
 
-    procedure.processOpening(SessionAccessLevel.DEBIT);
+    /*procedure.sendAPDU("", true);
 
-    procedure.prepareReleaseChannel();
+        assertThat(procedure.isApduSuccessful()).isTrue();
+    */
+    //logger.info("Wait 1 second");
+    //procedure.waitMilliSeconds(1000);
 
-    procedure.processClosing();
-
-    // Verify the application is no longer selected
-    // assertThat(calypsoPo.getDfName()).isEqualToIgnoringCase("");
+    logger.info("Remove smartcard");
+    procedure.waitForCardRemoval();
   }
 }

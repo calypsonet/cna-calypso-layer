@@ -1,18 +1,25 @@
 package org.calypsonet.certification.procedures;
 
+import static org.awaitility.Awaitility.await;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import org.calypsonet.certification.stub.StubCalypsoClassic;
 import org.calypsonet.certification.stub.StubSamCalypsoClassic;
 import org.eclipse.keyple.calypso.command.sam.SamRevision;
 import org.eclipse.keyple.calypso.transaction.*;
 import org.eclipse.keyple.core.card.message.*;
-import org.eclipse.keyple.core.card.selection.CardResource;
-import org.eclipse.keyple.core.card.selection.CardSelectionsResult;
-import org.eclipse.keyple.core.card.selection.CardSelectionsService;
-import org.eclipse.keyple.core.card.selection.CardSelector;
+import org.eclipse.keyple.core.card.selection.*;
 import org.eclipse.keyple.core.service.Plugin;
 import org.eclipse.keyple.core.service.PluginFactory;
 import org.eclipse.keyple.core.service.Reader;
 import org.eclipse.keyple.core.service.SmartCardService;
+import org.eclipse.keyple.core.service.event.ObservableReader;
+import org.eclipse.keyple.core.service.event.PluginObservationExceptionHandler;
+import org.eclipse.keyple.core.service.event.ReaderEvent;
+import org.eclipse.keyple.core.service.event.ReaderObservationExceptionHandler;
 import org.eclipse.keyple.core.service.util.ContactCardCommonProtocols;
 import org.eclipse.keyple.core.service.util.ContactlessCardCommonProtocols;
 import org.eclipse.keyple.core.util.ByteArrayUtil;
@@ -23,11 +30,12 @@ import org.eclipse.keyple.plugin.pcsc.PcscSupportedContactlessProtocols;
 import org.eclipse.keyple.plugin.stub.StubPluginFactory;
 import org.eclipse.keyple.plugin.stub.StubReader;
 import org.eclipse.keyple.plugin.stub.StubSmartCard;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+public class ProcedureAdapter implements Procedure, ObservableReader.ReaderObserver, PluginObservationExceptionHandler, ReaderObservationExceptionHandler {
 
-public class ProcedureAdapter implements Procedure {
+  private static final Logger logger = LoggerFactory.getLogger(ProcedureAdapter.class);
 
   private SmartCardService smartCardService;
   private Plugin plugin;
@@ -38,6 +46,45 @@ public class ProcedureAdapter implements Procedure {
   private CardResource<CalypsoPo> poResource;
   private PoTransaction poTransaction;
   private CardResponse cardResponse;
+  private AbstractSmartCard selectedCard;
+  private ReaderEvent.EventType eventType;
+  private Reader eventReader;
+
+  // This object is used to freeze the main thread while card operations are handle through the
+  // observers callbacks. A call to the notify() method would end the program (not demonstrated
+  // here).
+  private static final Object waitForEnd = new Object();
+
+  @Override
+  public void onPluginObservationError(String pluginName, Throwable e) {
+
+  }
+
+  @Override
+  public void onReaderObservationError(String pluginName, String readerName, Throwable e) {
+
+  }
+
+  /** Create a new class extending AbstractCardSelection */
+  public final class GenericCardSelection extends AbstractCardSelection {
+    public GenericCardSelection(CardSelector cardSelector) {
+      super(cardSelector);
+    }
+
+    @Override
+    protected AbstractSmartCard parse(CardSelectionResponse cardSelectionResponse) {
+      class GenericSmartCard extends AbstractSmartCard {
+        public GenericSmartCard(CardSelectionResponse cardSelectionResponse) {
+          super(cardSelectionResponse);
+        }
+
+        public String toJson() {
+          return "{}";
+        }
+      }
+      return new GenericSmartCard(cardSelectionResponse);
+    }
+  }
 
   @Override
   public void initializeContext(String... pluginsNames) {
@@ -49,11 +96,11 @@ public class ProcedureAdapter implements Procedure {
     String pluginName = pluginsNames[0];
     PluginFactory pluginFactory;
     if ("stub".equals(pluginName)) {
-      pluginFactory = new StubPluginFactory(pluginName, null, null);
+      pluginFactory = new StubPluginFactory(pluginName, this, this);
     } else if ("pcsc".equals(pluginName)) {
-      pluginFactory = new PcscPluginFactory(null, null);
+      pluginFactory = new PcscPluginFactory(this, this);
     } else {
-      pluginFactory = new PcscPluginFactory(null, null);
+      pluginFactory = new PcscPluginFactory(this, this);
       // throw new IllegalStateException("Bad plugin name : " + pluginName);
     }
     plugin = smartCardService.registerPlugin(pluginFactory);
@@ -85,7 +132,7 @@ public class ProcedureAdapter implements Procedure {
       }
     }
 
-    if (poReader instanceof StubReader){
+    if (poReader instanceof StubReader) {
       // Create 'virtual' Calypso card
       StubSmartCard stubPo = new StubCalypsoClassic();
     }
@@ -117,7 +164,7 @@ public class ProcedureAdapter implements Procedure {
       ((PcscReader) samReader).setIsoProtocol(PcscReader.IsoProtocol.T0);
     }
 
-    if (poReader instanceof StubReader){
+    if (poReader instanceof StubReader) {
       // Create 'virtual' SAM card
       StubSmartCard stubSam = new StubSamCalypsoClassic();
     }
@@ -186,8 +233,7 @@ public class ProcedureAdapter implements Procedure {
 
   @Override
   public void initializePoTransaction() {
-    poTransaction =
-            new PoTransaction(new CardResource<CalypsoPo>(poReader, calypsoPo));
+    poTransaction = new PoTransaction(new CardResource<CalypsoPo>(poReader, calypsoPo));
   }
 
   @Override
@@ -246,13 +292,63 @@ public class ProcedureAdapter implements Procedure {
   }
 
   @Override
+  public void activateSingleObservation(String aid) {
+    // Prepare the card selection
+    CardSelectionsService cardSelectionsService = new CardSelectionsService();
+
+    // first selection case targeting cards with aid
+    GenericCardSelection cardSelection =
+        new GenericCardSelection(
+            CardSelector.builder()
+                .aidSelector(CardSelector.AidSelector.builder().aidToSelect(aid).build())
+                .build());
+
+    // Add the selection case to the current selection
+    cardSelectionsService.prepareSelection(cardSelection);
+
+    // Provide the Reader with the selection operation to be processed when a card is inserted.
+    ((ObservableReader) poReader)
+        .setDefaultSelectionRequest(
+            cardSelectionsService.getDefaultSelectionsRequest(),
+            ObservableReader.NotificationMode.ALWAYS,
+            ObservableReader.PollingMode.SINGLESHOT);
+
+    // Set the current class as Observer of the first reader
+    ((ObservableReader) poReader).addObserver(this);
+  }
+
+  @Override
+  public void waitMilliSeconds(int delay) {
+    await()
+        .pollDelay(delay, TimeUnit.MILLISECONDS)
+        .until(
+            new Callable<Boolean>() {
+              @Override
+              public Boolean call() {
+                return true;
+              }
+            });
+  }
+
+  @Override
+  public void waitForCardInsertion() {
+    await().atMost(10, TimeUnit.SECONDS).until(eventOccurs(ReaderEvent.EventType.CARD_INSERTED, ReaderEvent.EventType.CARD_MATCHED));
+  }
+
+  @Override
+  public void waitForCardRemoval() {
+    //((ObservableReader) (eventReader)).finalizeCardProcessing();
+    await().atMost(10, TimeUnit.SECONDS).until(eventOccurs(ReaderEvent.EventType.CARD_REMOVED));
+  }
+
+  @Override
   public void sendAPDU(String apdu, boolean case4) {
     List<ApduRequest> apduRequestList = new ArrayList<ApduRequest>();
     apduRequestList.add(new ApduRequest(ByteArrayUtil.fromHex(apdu), case4));
     CardRequest cardRequest = new CardRequest(apduRequestList);
     System.out.println(cardRequest.getApduRequests().toString());
     cardResponse =
-            ((ProxyReader) poReader).transmitCardRequest(cardRequest, ChannelControl.CLOSE_AFTER);
+        ((ProxyReader) poReader).transmitCardRequest(cardRequest, ChannelControl.CLOSE_AFTER);
   }
 
   @Override
@@ -260,4 +356,28 @@ public class ProcedureAdapter implements Procedure {
     return cardResponse.getApduResponses().get(0).isSuccessful();
   }
 
+  /**
+   * Method invoked in the case of a reader event
+   *
+   * @param event the reader event
+   */
+  @Override
+  public void update(ReaderEvent event) {
+    logger.info(event.getEventType().toString());
+    eventType = event.getEventType();
+    eventReader = event.getReader();
+  }
+
+  Callable<Boolean> eventOccurs(final ReaderEvent.EventType... events) {
+    return new Callable<Boolean>() {
+      public Boolean call() {
+        for(ReaderEvent.EventType event:events) {
+          if (eventType == event) {
+            return true;
+          }
+        }
+        return false;
+      }
+    };
+  }
 }

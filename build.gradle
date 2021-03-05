@@ -9,6 +9,7 @@ apply plugin: "com.diffplug.spotless"
 group = groupId
 archivesBaseName = artifactId
 sourceCompatibility = javaSourceLevel
+targetCompatibility = javaTargetLevel
 
 // If your build script needs to use external libraries, you can add them to the script’s classpath in the
 // build script itself.
@@ -143,6 +144,8 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12
     extraLibs "org.slf4j:slf4j-log4j12:${slf4jlog4j12_version}"
+
+    extraLibs "org.awaitility:awaitility:4.0.3"
 
     configurations.compile.extendsFrom(configurations.extraLibs)
 }
