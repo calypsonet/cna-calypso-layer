@@ -30,6 +30,14 @@ public interface Procedure {
 
   String getPoStartupInfo();
 
+  void activateSingleObservation(String aid);
+
+  void waitMilliSeconds(int delay);
+
+  void waitForCardInsertion();
+
+  void waitForCardRemoval();
+
   void sendAPDU(String apdu, boolean case4);
 
   boolean isApduSuccessful();

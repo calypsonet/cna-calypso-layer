@@ -1,12 +1,12 @@
 package org.calypsonet.certification.calypso;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.calypsonet.certification.procedures.Procedure;
 import org.calypsonet.certification.procedures.ProcedureFactory;
 import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class RL31Test {
 
@@ -79,9 +79,7 @@ public class RL31Test {
    * @throws Exception
    */
   @AfterClass
-  public static void afterClass() throws Exception {
-
-  }
+  public static void afterClass() throws Exception {}
 
   @Test
   public void RL_31() {
@@ -95,7 +93,7 @@ public class RL31Test {
     //      Console.display("P1: 00");
     //      Console.display("P2: A0");
     //      Console.display("Le: 00");
-    procedure.sendAPDU("80 BE 00 A0 00", true);
+    procedure.sendAPDU("80 BE 00 A0 00", false);
 
     assertThat(procedure.isApduSuccessful()).isTrue();
   }
