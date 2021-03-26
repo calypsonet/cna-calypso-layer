@@ -6,6 +6,8 @@ import org.junit.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class RL22Test {
 
   private static final Logger logger = LoggerFactory.getLogger(RL22Test.class);
@@ -94,12 +96,11 @@ public class RL22Test {
     logger.info("Wait 1 second");
     procedure.waitMilliSeconds(1000);
 
-    /*procedure.sendAPDU("", true);
+    procedure.sendAPDU("00 B2 01 3C 1D", true);
+    assertThat(procedure.isApduSuccessful()).isTrue();
 
-        assertThat(procedure.isApduSuccessful()).isTrue();
-    */
-    //logger.info("Wait 1 second");
-    //procedure.waitMilliSeconds(1000);
+    logger.info("Wait 1 second");
+    procedure.waitMilliSeconds(1000);
 
     logger.info("Remove smartcard");
     procedure.waitForCardRemoval();
