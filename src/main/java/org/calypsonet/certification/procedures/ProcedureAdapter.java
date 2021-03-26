@@ -122,12 +122,14 @@ public class ProcedureAdapter implements Procedure, ObservableReader.ReaderObser
       // Get and configure a contactless reader
       if (poReader instanceof PcscReader) {
         ((PcscReader) poReader).setContactless(true);
+        ((PcscReader) poReader).setSharingMode(PcscReader.SharingMode.SHARED);
         ((PcscReader) poReader).setIsoProtocol(PcscReader.IsoProtocol.T1);
       }
     } else {
       // Get and configure a contact reader
       if (poReader instanceof PcscReader) {
         ((PcscReader) poReader).setContactless(false);
+        ((PcscReader) poReader).setSharingMode(PcscReader.SharingMode.SHARED);
         ((PcscReader) poReader).setIsoProtocol(PcscReader.IsoProtocol.T0);
       }
     }
@@ -348,7 +350,7 @@ public class ProcedureAdapter implements Procedure, ObservableReader.ReaderObser
     CardRequest cardRequest = new CardRequest(apduRequestList);
     System.out.println(cardRequest.getApduRequests().toString());
     cardResponse =
-        ((ProxyReader) poReader).transmitCardRequest(cardRequest, ChannelControl.CLOSE_AFTER);
+        ((ProxyReader) poReader).transmitCardRequest(cardRequest, ChannelControl.KEEP_OPEN);
   }
 
   @Override
@@ -363,9 +365,10 @@ public class ProcedureAdapter implements Procedure, ObservableReader.ReaderObser
    */
   @Override
   public void update(ReaderEvent event) {
-    logger.info(event.getEventType().toString());
     eventType = event.getEventType();
-    eventReader = event.getReader();
+    if(event.getEventType() != ReaderEvent.EventType.UNREGISTERED) {
+      eventReader = event.getReader();
+    }
   }
 
   Callable<Boolean> eventOccurs(final ReaderEvent.EventType... events) {
