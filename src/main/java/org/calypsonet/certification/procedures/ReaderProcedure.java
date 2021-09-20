@@ -8,11 +8,9 @@ public interface ReaderProcedure {
 
   void RL_UR_SetupCardReader(String readerName, boolean isContactless, String cardProtocol);
 
-  void RL_UR_SetupSamReader(String readerName);
-
   void RL_UR_IsCardPresent();
 
-  void RL_UR_IsSamPresent();
+  void RL_UR_SelectCard();
 
   void RL_UR_ActivateSingleObservation();
 

@@ -6,11 +6,9 @@ public interface CardProcedure {
 
   void RL_UC_ResetContext();
 
-  void RL_UC_PrepareCardSelection();
+  void RL_UC_CreateCardSelection();
 
-  void RL_UC_PrepareCardSelection(String aid);
-
-  void RL_UC_SelectCard();
+  void RL_UC_CreateCardSelection(String aid);
 
   void RL_UC_InitializeGenericCardTransactionManager();
 

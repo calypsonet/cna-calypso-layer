@@ -13,16 +13,15 @@ public class CardProcedureAdapter implements CardProcedure {
 
   private static final Logger logger = LoggerFactory.getLogger(CardProcedureAdapter.class);
 
-  private final ParameterDto parameterDto;
+  private final CommonDto commonDto;
   private GenericExtensionService genericExtensionService;
-  private GenericCardSelection genericCardSelection;
   private GenericCardTransactionManager genericCardTransactionManager;
   private List<byte[]> apduResponsesBytes;
   private List<String> apduResponsesHex;
   private CardApiSpecific cardApiSpecific = new CardApiSpecificAdapter();
 
 
-  public CardProcedureAdapter(ParameterDto parameterDto) { this.parameterDto = parameterDto; }
+  public CardProcedureAdapter(CommonDto commonDto) { this.commonDto = commonDto; }
 
   @Override
   public void RL_UC_InitializeContext() {
@@ -37,42 +36,24 @@ public class CardProcedureAdapter implements CardProcedure {
   public void RL_UC_ResetContext() { cardApiSpecific.resetCardContext(); }
 
   @Override
-  public void RL_UC_PrepareCardSelection() {
+  public void RL_UC_CreateCardSelection() {
     // Create a card selection using the generic card extension without specifying any filter
     // (protocol/power-on data/DFName).
-    genericCardSelection = genericExtensionService.createCardSelection();
-
-    // Prepare the selection by adding the created generic selection to the card selection scenario.
-    parameterDto.cardSelectionManager.prepareSelection(genericCardSelection);
+    GenericCardSelection genericCardSelection = genericExtensionService.createCardSelection();
+    commonDto.cardSelection = genericCardSelection;
   }
 
   @Override
-  public void RL_UC_PrepareCardSelection(String aid) {
+  public void RL_UC_CreateCardSelection(String aid) {
     // Create a card selection using the generic card extension without specifying any filter
     // (protocol/power-on data/DFName).
-    genericCardSelection = genericExtensionService.createCardSelection();
-
-    // Prepare the selection by adding the created generic selection to the card selection scenario.
-    parameterDto.cardSelectionManager.prepareSelection(genericCardSelection.filterByDfName(aid));
-  }
-
-  @Override
-  public void RL_UC_SelectCard() {
-
-    // Actual card communication: run the selection scenario.
-    parameterDto.cardSelectionResult =
-            parameterDto.cardSelectionManager.processCardSelectionScenario(parameterDto.cardReader);
-
-    // Check the selection result.
-    if (parameterDto.cardSelectionResult.getActiveSmartCard() != null) {
-      // Get the SmartCard resulting of the selection.
-      parameterDto.smartCard = parameterDto.cardSelectionResult.getActiveSmartCard();
-    }
+    GenericCardSelection genericCardSelection = genericExtensionService.createCardSelection();
+    commonDto.cardSelection = genericCardSelection.filterByDfName(aid);
   }
 
   @Override
   public void RL_UC_InitializeGenericCardTransactionManager() {
-    genericCardTransactionManager = genericExtensionService.createCardTransaction(parameterDto.cardReader, parameterDto.smartCard);
+    genericCardTransactionManager = genericExtensionService.createCardTransaction(commonDto.cardReader, commonDto.smartCard);
   }
 
   @Override

@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 public class CL121Test {
 
   private static final Logger logger = LoggerFactory.getLogger(CL121Test.class);
-  private static ReaderProcedure readerProcedure;
+  private static CalypsoReaderProcedure readerProcedure;
   private static CalypsoProcedure calypsoProcedure;
   private static String cardReaderName;
   private static String cardReaderType;
@@ -29,10 +29,10 @@ public class CL121Test {
   @BeforeClass
   public static void beforeClass() throws Exception {
 
-    ParameterDto parameterDto =  new ParameterDto();
+    CommonDto commonDto =  new CommonDto();
     // Get procedure adapter
-    readerProcedure = new ReaderProcedureAdapter(parameterDto);
-    calypsoProcedure = new CalypsoProcedureAdapter(parameterDto);
+    readerProcedure = new CalypsoReaderProcedureAdapter(commonDto);
+    calypsoProcedure = new CalypsoProcedureAdapter(commonDto);
 
     // Configuration parameters
     cardReaderName = ConfigProperties.getValue(ConfigProperties.Key.CARD_READER_1_NAME);
@@ -102,36 +102,40 @@ public class CL121Test {
 
     // Selection application response with additional data
     // Data emulated : FCI + Data_80
-    calypsoProcedure.CL_UT_PrepareCardSelection(cardDfName1);
-    calypsoProcedure.CL_UT_SelectCard();
+    calypsoProcedure.CL_UT_CreateCardSelection(cardDfName1);
+    readerProcedure.RL_UR_SelectCard();
 
+    calypsoProcedure.CL_UT_SetCard();
     assertThat(calypsoProcedure.CL_UT_GetCardDfName()).isEqualToIgnoringCase(cardDfName1);
     assertThat(calypsoProcedure.CL_UT_GetCardApplicationSerialNumber()).isEqualToIgnoringCase(cardSerialNumber1);
     assertThat(calypsoProcedure.CL_UT_GetCardStartupInfo()).isEqualToIgnoringCase(cardStartupInfo1);
 
     // Selection application response with additional data
     // Data emulated : Data_80 + FCI
-    calypsoProcedure.CL_UT_PrepareCardSelection(cardDfName1);
-    calypsoProcedure.CL_UT_SelectCard();
+    calypsoProcedure.CL_UT_CreateCardSelection(cardDfName1);
+    readerProcedure.RL_UR_SelectCard();
 
+    calypsoProcedure.CL_UT_SetCard();
     assertThat(calypsoProcedure.CL_UT_GetCardDfName()).isEqualToIgnoringCase(cardDfName1);
     assertThat(calypsoProcedure.CL_UT_GetCardApplicationSerialNumber()).isEqualToIgnoringCase(cardSerialNumber1);
     assertThat(calypsoProcedure.CL_UT_GetCardStartupInfo()).isEqualToIgnoringCase(cardStartupInfo1);
 
     // Selection application response with additional data
     // Data emulated : Data_A0 + FCI
-    calypsoProcedure.CL_UT_PrepareCardSelection(cardDfName1);
-    calypsoProcedure.CL_UT_SelectCard();
+    calypsoProcedure.CL_UT_CreateCardSelection(cardDfName1);
+    readerProcedure.RL_UR_SelectCard();
 
+    calypsoProcedure.CL_UT_SetCard();
     assertThat(calypsoProcedure.CL_UT_GetCardDfName()).isEqualToIgnoringCase(cardDfName1);
     assertThat(calypsoProcedure.CL_UT_GetCardApplicationSerialNumber()).isEqualToIgnoringCase(cardSerialNumber1);
     assertThat(calypsoProcedure.CL_UT_GetCardStartupInfo()).isEqualToIgnoringCase(cardStartupInfo1);
 
     // Selection application response with additional data
     // Data emulated : Data_80 + FCI + Data_A0
-    calypsoProcedure.CL_UT_PrepareCardSelection(cardDfName1);
-    calypsoProcedure.CL_UT_SelectCard();
+    calypsoProcedure.CL_UT_CreateCardSelection(cardDfName1);
+    readerProcedure.RL_UR_SelectCard();
 
+    calypsoProcedure.CL_UT_SetCard();
     assertThat(calypsoProcedure.CL_UT_GetCardDfName()).isEqualToIgnoringCase(cardDfName1);
     assertThat(calypsoProcedure.CL_UT_GetCardApplicationSerialNumber()).isEqualToIgnoringCase(cardSerialNumber1);
     assertThat(calypsoProcedure.CL_UT_GetCardStartupInfo()).isEqualToIgnoringCase(cardStartupInfo1);

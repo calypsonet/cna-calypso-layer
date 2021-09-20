@@ -29,10 +29,10 @@ public class RL22Test {
   @BeforeClass
   public static void beforeClass() throws Exception {
 
-    ParameterDto parameterDto =  new ParameterDto();
+    CommonDto commonDto =  new CommonDto();
     // Get procedure adapter
-    readerProcedure = new ReaderProcedureAdapter(parameterDto);
-    cardProcedure = new CardProcedureAdapter(parameterDto);
+    readerProcedure = new ReaderProcedureAdapter(commonDto);
+    cardProcedure = new CardProcedureAdapter(commonDto);
 
     // Configuration parameters
     cardReaderName = ConfigProperties.getValue(ConfigProperties.Key.CARD_READER_1_NAME);
@@ -66,7 +66,7 @@ public class RL22Test {
     // Prepare PO reader
     readerProcedure.RL_UR_SetupCardReader(cardReaderName, isCardReaderContactless, cardProtocol);
 
-    cardProcedure.RL_UC_PrepareCardSelection(cardDfName);
+    cardProcedure.RL_UC_CreateCardSelection(cardDfName);
   }
 
   /**

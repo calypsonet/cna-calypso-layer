@@ -5,6 +5,8 @@ import org.calypsonet.certification.spi.ReaderApiSpecificAdapter;
 import org.calypsonet.terminal.reader.CardReader;
 import org.calypsonet.terminal.reader.CardReaderEvent;
 import org.calypsonet.terminal.reader.ObservableCardReader;
+import org.calypsonet.terminal.reader.selection.CardSelectionManager;
+import org.calypsonet.terminal.reader.selection.CardSelectionResult;
 import org.calypsonet.terminal.reader.spi.CardReaderObservationExceptionHandlerSpi;
 import org.calypsonet.terminal.reader.spi.CardReaderObserverSpi;
 import org.slf4j.Logger;
@@ -15,23 +17,25 @@ import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
 
-public class ReaderProcedureAdapter implements ReaderProcedure , CardReaderObserverSpi, CardReaderObservationExceptionHandlerSpi {
+public class ReaderProcedureAdapter implements ReaderProcedure, CardReaderObserverSpi, CardReaderObservationExceptionHandlerSpi {
 
   private static final Logger logger = LoggerFactory.getLogger(ReaderProcedureAdapter.class);
 
-  private final ParameterDto parameterDto;
+  public final CommonDto commonDto;
+  private CardSelectionManager cardSelectionManager;
+  private CardSelectionResult cardSelectionResult;
   private CardReaderEvent.Type eventType;
   private CardReader eventReader;
 
-  private ReaderApiSpecific readerLayerSpecific = new ReaderApiSpecificAdapter();
+  public ReaderApiSpecific readerApiSpecific = new ReaderApiSpecificAdapter();
 
   // This object is used to freeze the main thread while card operations are handle through the
   // observers callbacks. A call to the notify() method would end the program (not demonstrated
   // here).
   private static final Object waitForEnd = new Object();
 
-  public ReaderProcedureAdapter(ParameterDto parameterDto) {
-    this.parameterDto = parameterDto;
+  public ReaderProcedureAdapter(CommonDto commonDto) {
+    this.commonDto = commonDto;
   }
 
   @Override
@@ -41,19 +45,19 @@ public class ReaderProcedureAdapter implements ReaderProcedure , CardReaderObser
 
   @Override
   public void RL_UR_InitializeContext() {
-    readerLayerSpecific.initializeReaderContext();
+    readerApiSpecific.initializeReaderContext();
   }
 
   @Override
   public void RL_UR_ResetContext() {
-    readerLayerSpecific.resetReaderContext();
+    readerApiSpecific.resetReaderContext();
   }
 
   @Override
   public void RL_UR_SetupCardReader(String readerName, boolean isContactless, String cardProtocol) {
 
     // Prepare PO reader
-    parameterDto.cardReader = readerLayerSpecific.setupCardReader(readerName, isContactless, cardProtocol);
+    commonDto.cardReader = readerApiSpecific.setupCardReader(readerName, isContactless, cardProtocol);
 
     // Activate card protocols
     /*if (cardProtocol.equals("NFC_A_ISO_14443_3A")) {
@@ -70,68 +74,51 @@ public class ReaderProcedureAdapter implements ReaderProcedure , CardReaderObser
     }*/
 
     // Get the core card selection manager.
-    parameterDto.cardSelectionManager = readerLayerSpecific.createCardSelectionManager();
-  }
-
-  @Override
-  public void RL_UR_SetupSamReader(String readerName) {
-
-    parameterDto.samReader = readerLayerSpecific.setupSamReader(readerName);
-
-    // Create a SAM selection manager.
-    parameterDto.samSelectionManager = readerLayerSpecific.createCardSelectionManager();
+    cardSelectionManager = readerApiSpecific.createCardSelectionManager();
   }
 
   @Override
   public void RL_UR_IsCardPresent() {
     // Check the card presence
-    if (!parameterDto.cardReader.isCardPresent()) {
-      throw new IllegalStateException("No card is present in the reader " + parameterDto.cardReader.getName());
+    if (!commonDto.cardReader.isCardPresent()) {
+      throw new IllegalStateException("No card is present in the reader " + commonDto.cardReader.getName());
     }
   }
 
-  public void RL_UR_IsSamPresent() {
-    // Check the SAM presence
-    if (!parameterDto.samReader.isCardPresent()) {
-      throw new IllegalStateException("No SAM is present in the reader " + parameterDto.samReader.getName());
+  @Override
+  public void RL_UR_SelectCard() {
+
+    // Prepare the selection by adding the created card selection to the card selection
+    // scenario.
+    cardSelectionManager.prepareSelection(commonDto.cardSelection);
+
+    // Actual card communication: run the selection scenario.
+    cardSelectionResult = cardSelectionManager.processCardSelectionScenario(commonDto.cardReader);
+
+    // Check the selection result.
+    if (cardSelectionResult.getActiveSmartCard() != null) {
+      // Get the SmartCard resulting of the selection.
+      commonDto.smartCard = cardSelectionResult.getActiveSmartCard();
     }
   }
 
   @Override
   public void RL_UR_ActivateSingleObservation() {
-   /* // Prepare the card selection
-    CardSelectionsService cardSelectionsService = new CardSelectionsService();
 
-    // first selection case targeting cards with aid
-    GenericCardSelection cardSelection =
-        new GenericCardSelection(
-            CardSelector.builder()
-                .aidSelector(CardSelector.AidSelector.builder().aidToSelect(aid).build())
-                .build());
-
-    // Add the selection case to the current selection
-    cardSelectionsService.prepareSelection(cardSelection);
-
-    // Provide the Reader with the selection operation to be processed when a card is inserted.
-    ((ObservableReader) poReader)
-        .setDefaultSelectionRequest(
-            cardSelectionsService.getDefaultSelectionsRequest(),
-            ObservableReader.NotificationMode.ALWAYS,
-            ObservableReader.PollingMode.SINGLESHOT);
-
-    // Set the current class as Observer of the first reader
-    ((ObservableReader) poReader).addObserver(this);*/
+    // Prepare the selection by adding the created card selection to the card selection
+    // scenario.
+    cardSelectionManager.prepareSelection(commonDto.cardSelection);
 
     // Schedule the selection scenario.
-    parameterDto.cardSelectionManager.scheduleCardSelectionScenario(
-            (ObservableCardReader) parameterDto.cardReader,
+    cardSelectionManager.scheduleCardSelectionScenario(
+            (ObservableCardReader) commonDto.cardReader,
             ObservableCardReader.DetectionMode.SINGLESHOT,
             ObservableCardReader.NotificationMode.ALWAYS);
 
     // Create and add an observer
-    ((ObservableCardReader) parameterDto.cardReader).setReaderObservationExceptionHandler(this);
-    ((ObservableCardReader) parameterDto.cardReader).addObserver(this);
-    ((ObservableCardReader) parameterDto.cardReader).startCardDetection(ObservableCardReader.DetectionMode.REPEATING);
+    ((ObservableCardReader) commonDto.cardReader).setReaderObservationExceptionHandler(this);
+    ((ObservableCardReader) commonDto.cardReader).addObserver(this);
+    ((ObservableCardReader) commonDto.cardReader).startCardDetection(ObservableCardReader.DetectionMode.REPEATING);
   }
 
   @Override
@@ -155,7 +142,7 @@ public class ReaderProcedureAdapter implements ReaderProcedure , CardReaderObser
   @Override
   public void RL_UR_WaitForCardRemoval() {
     //((ObservableCardReader) (eventReader)).finalizeCardProcessing();
-    ((ObservableCardReader) (parameterDto.cardReader)).finalizeCardProcessing();
+    ((ObservableCardReader) (commonDto.cardReader)).finalizeCardProcessing();
     await().atMost(10, TimeUnit.SECONDS).until(eventOccurs(CardReaderEvent.Type.CARD_REMOVED));
   }
 
@@ -170,8 +157,8 @@ public class ReaderProcedureAdapter implements ReaderProcedure , CardReaderObser
     eventType = event.getType();
     if(eventType != CardReaderEvent.Type.UNAVAILABLE) {
       //eventReader = event.getReaderName();
-      parameterDto.smartCard =
-              parameterDto.cardSelectionManager
+      commonDto.smartCard =
+              cardSelectionManager
                       .parseScheduledCardSelectionsResponse(event.getScheduledCardSelectionsResponse())
                       .getActiveSmartCard();
     }
