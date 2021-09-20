@@ -1,4 +1,4 @@
-package org.calypsonet.certification.calypso;
+package org.calypsonet.certification.reader;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -7,8 +7,5 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({ // tests list
   RL22Test.class,
   RL31Test.class,
-  CL116Test.class,
-  CL121Test.class,
-  SecondTest.class
 })
-public class FirstTestSuite {}
+public class RLTestSuite {}

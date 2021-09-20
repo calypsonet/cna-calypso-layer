@@ -1,4 +1,4 @@
-package org.calypsonet.certification.calypso;
+package org.calypsonet.certification;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

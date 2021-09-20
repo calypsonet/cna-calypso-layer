@@ -2,14 +2,14 @@ package org.calypsonet.certification.procedures;
 
 public class ProcedureFactory {
 
-  public static Procedure getProcedure()
+  public static CalypsoProcedure getProcedure()
       throws ClassNotFoundException, IllegalAccessException, InstantiationException {
 
-    Class<Procedure> procedureClass =
-        (Class<Procedure>)
+    Class<CalypsoProcedure> procedureClass =
+        (Class<CalypsoProcedure>)
             Thread.currentThread()
                 .getContextClassLoader()
-                .loadClass("org.calypsonet.certification.procedures.ProcedureAdapter");
+                .loadClass("org.calypsonet.certification.procedures.CalypsoProcedureAdapter");
     return procedureClass.newInstance();
   }
 }
