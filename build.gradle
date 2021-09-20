@@ -121,12 +121,23 @@ jar {
 
 dependencies {
 
+    // CALYPSO DEPENDENCIES
+
+    extraLibs "org.calypsonet.terminal:calypsonet-terminal-reader-java-api:1.0.+"
+    extraLibs "org.calypsonet.terminal:calypsonet-terminal-card-java-api:1.0.+"
+
+    extraLibs "org.calypsonet.terminal:calypsonet-terminal-calypso-java-api:1.0.+"
+
     // KEYPLE DEPENDENCIES
 
-    extraLibs "org.eclipse.keyple:keyple-java-core:${keyple_java_core_version}"
-    extraLibs "org.eclipse.keyple:keyple-java-calypso:${keyple_java_calypso_version}"
-    extraLibs "org.eclipse.keyple:keyple-java-plugin-stub:${keyple_java_plugin_stub_version}"
-    extraLibs "org.eclipse.keyple:keyple-java-plugin-pcsc:${keyple_java_plugin_pcsc_version}"
+    extraLibs "org.eclipse.keyple:keyple-common-java-api:2.0.+"
+    extraLibs "org.eclipse.keyple:keyple-util-java-lib:2.+"
+
+    extraLibs "org.eclipse.keyple:keyple-service-java-lib:2.0.+"
+    extraLibs "org.eclipse.keyple:keyple-card-calypso-java-lib:2.0.+"
+
+    extraLibs "org.eclipse.keyple:keyple-plugin-pcsc-java-lib:2.0.+"
+    extraLibs "org.eclipse.keyple:keyple-plugin-stub-java-lib:2.0.+"
 
     // EXTERNAL DEPENDENCIES
 

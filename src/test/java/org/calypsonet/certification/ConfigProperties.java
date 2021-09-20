@@ -1,4 +1,4 @@
-package org.calypsonet.certification.calypso;
+package org.calypsonet.certification;
 
 import java.io.*;
 import java.util.Properties;
@@ -44,18 +44,17 @@ public final class ConfigProperties {
   /** Properties keys. */
   public enum Key {
     PLUGIN_NAME("plugin.name"),
-    PO_READER_1_NAME("reader.po.1.name"),
-    PO_READER_1_TYPE("reader.po.1.type"),
-    PO_READER_2_NAME("reader.po.2.name"),
-    PO_READER_2_TYPE("reader.po.2.type"),
+    CARD_READER_1_NAME("reader.card.1.name"),
+    CARD_READER_1_TYPE("reader.card.1.type"),
+    CARD_READER_2_NAME("reader.card.2.name"),
+    CARD_READER_2_TYPE("reader.card.2.type"),
     SAM_READER_1_NAME("reader.sam.1.name"),
-    SAM_1_REVISION("sam.1.revision"),
-    PO_1_PROTOCOL("po.1.protocol"),
-    PO_1_DFNAME("po.1.dfname"),
-    PO_1_SERIALNUMBER("po.1.serialnumber"),
-    PO_1_STARTUPINFO("po.1.startupinfo"),
-    PO_2_PROTOCOL("po.2.protocol"),
-    PO_2_DFNAME("po.2.dfname");
+    CARD_1_PROTOCOL("card.1.protocol"),
+    CARD_1_DFNAME("card.1.dfname"),
+    CARD_1_SERIALNUMBER("card.1.serialnumber"),
+    CARD_1_STARTUPINFO("card.1.startupinfo"),
+    CARD_2_PROTOCOL("card.2.protocol"),
+    CARD_2_DFNAME("card.2.dfname");
 
     private final String keyName;
 
@@ -71,7 +70,7 @@ public final class ConfigProperties {
   /**
    * Gets the value of the provided key name.
    *
-   * @param key
+   * @param key key name
    * @return a nullable string.
    */
   public static String getValue(Key key) {
