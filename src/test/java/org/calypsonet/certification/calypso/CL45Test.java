@@ -11,7 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CL45Test {
 
   private static final Logger logger = LoggerFactory.getLogger(CL45Test.class);
-  private static ReaderProcedure readerProcedure;
+  private static CalypsoReaderProcedure readerProcedure;
   private static CalypsoProcedure calypsoProcedure;
   private static String cardReaderName;
   private static String cardReaderType;
@@ -28,10 +28,10 @@ public class CL45Test {
   @BeforeClass
   public static void beforeClass() throws Exception {
 
-    ParameterDto parameterDto =  new ParameterDto();
+    CommonDto commonDto =  new CommonDto();
     // Get procedure adapter
-    readerProcedure = new ReaderProcedureAdapter(parameterDto);
-    calypsoProcedure = new CalypsoProcedureAdapter(parameterDto);
+    readerProcedure = new CalypsoReaderProcedureAdapter(commonDto);
+    calypsoProcedure = new CalypsoProcedureAdapter(commonDto);
 
 
     // Configuration parameters
@@ -67,17 +67,20 @@ public class CL45Test {
     // Prepare card reader
     readerProcedure.RL_UR_SetupCardReader(cardReaderName, isCardReaderContactless, cardProtocol1);
 
-    // Prepare SAM reader
+    // Prepare SAM
     readerProcedure.RL_UR_SetupSamReader(samReaderName);
 
     readerProcedure.RL_UR_IsSamPresent();
 
-    // Prepare Security Setting
-    calypsoProcedure.CL_UT_SetupCardSecuritySetting();
+    calypsoProcedure.CL_UT_CreateSamSelection();
+
+    readerProcedure.RL_UR_SelectSam();
+
+    calypsoProcedure.CL_UT_SetSam();
 
     readerProcedure.RL_UR_IsCardPresent();
 
-    calypsoProcedure.CL_UT_PrepareCardSelection(cardDfName1);
+    calypsoProcedure.CL_UT_CreateCardSelection(cardDfName1);
   }
 
   /**
@@ -106,8 +109,9 @@ public class CL45Test {
         "Validate that the Revision 3 is selected as operating mode by the Calypso Layer for session using a PO Prime Revision 3 without Revision 3.2 \n" +
                 "\tmode and a SAM-C1");
 
-    calypsoProcedure.CL_UT_SelectCard();
+    readerProcedure.RL_UR_SelectCard();
 
+    calypsoProcedure.CL_UT_SetCard();
     assertThat(calypsoProcedure.CL_UT_GetCardDfName()).isEqualToIgnoringCase(cardDfName1);
     assertThat(calypsoProcedure.CL_UT_IsExtendedModeSupported()).isFalse();
     assertThat(calypsoProcedure.CL_UT_IsPkiModeSupported()).isFalse();

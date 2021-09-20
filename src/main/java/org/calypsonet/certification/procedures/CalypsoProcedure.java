@@ -6,11 +6,13 @@ public interface CalypsoProcedure {
 
   void CL_UT_ResetContext();
 
-  void CL_UT_SetupCardSecuritySetting();
+  void CL_UT_CreateSamSelection();
 
-  void CL_UT_PrepareCardSelection(String aid);
+  void CL_UT_SetSam();
 
-  void CL_UT_SelectCard();
+  void CL_UT_CreateCardSelection(String aid);
+
+  void CL_UT_SetCard();
 
   void CL_UT_InitializeCardTransactionManager();
 

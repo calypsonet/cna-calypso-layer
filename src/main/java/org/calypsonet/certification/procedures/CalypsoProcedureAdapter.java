@@ -1,7 +1,5 @@
 package org.calypsonet.certification.procedures;
 
-import static org.awaitility.Awaitility.await;
-
 import org.calypsonet.certification.spi.CalypsoApiSpecific;
 import org.calypsonet.certification.spi.CalypsoApiSpecificAdapter;
 import org.calypsonet.terminal.calypso.*;
@@ -18,118 +16,61 @@ public class CalypsoProcedureAdapter implements CalypsoProcedure {//}, CardReade
 
   private static final Logger logger = LoggerFactory.getLogger(CalypsoProcedureAdapter.class);
 
-  private final ParameterDto parameterDto;
+  private final CommonDto commonDto;
   private CalypsoCard calypsoCard;
   private CalypsoSam calypsoSam;
   private CardSecuritySetting cardSecuritySetting;
   private CardTransactionManager cardTransactionManager;
 
-  private CalypsoApiSpecific calypsoLayerSpecific = new CalypsoApiSpecificAdapter();
+  private CalypsoApiSpecific calypsoApiSpecific = new CalypsoApiSpecificAdapter();
 
   // This object is used to freeze the main thread while card operations are handle through the
   // observers callbacks. A call to the notify() method would end the program (not demonstrated
   // here).
   private static final Object waitForEnd = new Object();
 
-  public CalypsoProcedureAdapter(ParameterDto parameterDto) {
-    this.parameterDto = parameterDto;
+  public CalypsoProcedureAdapter(CommonDto commonDto) {
+    this.commonDto = commonDto;
   }
-
-/* @Override
-  public void onPluginObservationError(String pluginName, Throwable e) {
-
-  }
-
-  @Override
-  public void onReaderObservationError(String pluginName, String readerName, Throwable e) {
-
-  }*/
-
-  /** Create a new class extending AbstractCardSelection */
-  /*public final class GenericCardSelection extends AbstractCardSelection {
-    public GenericCardSelection(CardSelector cardSelector) {
-      super(cardSelector);
-    }
-
-    @Override
-    protected AbstractSmartCard parse(CardSelectionResponse cardSelectionResponse) {
-      class GenericSmartCard extends AbstractSmartCard {
-        public GenericSmartCard(CardSelectionResponse cardSelectionResponse) {
-          super(cardSelectionResponse);
-        }
-
-        public String toJson() {
-          return "{}";
-        }
-      }
-      return new GenericSmartCard(cardSelectionResponse);
-    }
-  }*/
 
   @Override
   public void CL_UT_InitializeContext() {
-    calypsoLayerSpecific.initializeCalypsoContext();
+    calypsoApiSpecific.initializeCalypsoContext();
   }
 
   @Override
   public void CL_UT_ResetContext() {
-    calypsoLayerSpecific.resetCalypsoContext();
+    calypsoApiSpecific.resetCalypsoContext();
   }
 
   @Override
-  public void CL_UT_SetupCardSecuritySetting() {
+  public void CL_UT_CreateSamSelection() {
     // Create a SAM selection using the Calypso card extension.
-    parameterDto.samSelectionManager.prepareSelection(
-            calypsoLayerSpecific.createSamSelection());
-
-    // Actual card communication: process the SAM selection.
-    parameterDto.samSelectionResult =
-            parameterDto.samSelectionManager.processCardSelectionScenario(parameterDto.samReader);
-
-    // Check the selection result.
-    if (parameterDto.samSelectionResult.getActiveSmartCard() == null) {
-      throw new IllegalStateException(
-              "The SAM selection failed.");
-    }
-
-    // Get the SmartCard resulting of the selection.
-    calypsoSam = (CalypsoSam) parameterDto.samSelectionResult.getActiveSmartCard();
+    commonDto.samSelection = calypsoApiSpecific.createSamSelection();
   }
 
+  public void CL_UT_SetSam(){ calypsoSam = (CalypsoSam) commonDto.samSmartCard; }
+
   @Override
-  public void CL_UT_PrepareCardSelection(String aid) {
+  public void CL_UT_CreateCardSelection(String aid) {
     // First selection case targeting cards with AID1
     // Create a card selection.
-    CalypsoCardSelection calypsoCardSelection = calypsoLayerSpecific.createCardSelection();
+    CalypsoCardSelection calypsoCardSelection = calypsoApiSpecific.createCardSelection();
 
-    // Prepare the selection by adding the created Calypso card selection to the card selection
-    // scenario.
-    parameterDto.cardSelectionManager.prepareSelection(
-            calypsoCardSelection
-                    .filterByDfName(aid)
-                    .acceptInvalidatedCard());
+    commonDto.cardSelection = calypsoCardSelection
+            .filterByDfName(aid)
+            .acceptInvalidatedCard();
   }
 
-  @Override
-  public void CL_UT_SelectCard() {
-    // Actual card communication: run the selection scenario.
-    parameterDto.cardSelectionResult =
-            parameterDto.cardSelectionManager.processCardSelectionScenario(parameterDto.cardReader);
-
-    // Check the selection result.
-    if (parameterDto.cardSelectionResult.getActiveSmartCard() != null) {
-      // Get the SmartCard resulting of the selection.
-      calypsoCard = (CalypsoCard) parameterDto.cardSelectionResult.getActiveSmartCard();
-    }
-  }
+  public void CL_UT_SetCard(){ calypsoCard = (CalypsoCard) commonDto.smartCard; }
 
   @Override
   public void CL_UT_InitializeCardTransactionManager() {
-    cardSecuritySetting = calypsoLayerSpecific.createCardSecuritySetting();
+    cardSecuritySetting = calypsoApiSpecific.createCardSecuritySetting();
 
-    cardSecuritySetting.setSamResource(parameterDto.samReader, calypsoSam);
+    cardSecuritySetting.setSamResource(commonDto.samReader, calypsoSam);
 
-    cardTransactionManager = calypsoLayerSpecific.createCardTransaction(parameterDto.cardReader, calypsoCard, cardSecuritySetting);
+    cardTransactionManager = calypsoApiSpecific.createCardTransaction(commonDto.cardReader, calypsoCard, cardSecuritySetting);
   }
 
   @Override

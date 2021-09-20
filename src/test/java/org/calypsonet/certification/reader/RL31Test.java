@@ -32,10 +32,10 @@ public class RL31Test {
   @BeforeClass
   public static void beforeClass() throws Exception {
 
-    ParameterDto parameterDto =  new ParameterDto();
+    CommonDto commonDto =  new CommonDto();
     // Get procedure adapter
-    readerProcedure = new ReaderProcedureAdapter(parameterDto);
-    cardProcedure = new CardProcedureAdapter(parameterDto);
+    readerProcedure = new ReaderProcedureAdapter(commonDto);
+    cardProcedure = new CardProcedureAdapter(commonDto);
 
     // Configuration parameters
     cardReaderName = ConfigProperties.getValue(ConfigProperties.Key.CARD_READER_2_NAME);
@@ -71,9 +71,9 @@ public class RL31Test {
 
     readerProcedure.RL_UR_IsCardPresent();
 
-    cardProcedure.RL_UC_PrepareCardSelection();
+    cardProcedure.RL_UC_CreateCardSelection();
 
-    cardProcedure.RL_UC_SelectCard();
+    readerProcedure.RL_UR_SelectCard();
 
     cardProcedure.RL_UC_InitializeGenericCardTransactionManager();
   }
