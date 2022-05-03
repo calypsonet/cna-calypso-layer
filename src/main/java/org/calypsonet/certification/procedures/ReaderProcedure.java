@@ -1,5 +1,7 @@
 package org.calypsonet.certification.procedures;
 
+import org.calypsonet.terminal.reader.ConfigurableCardReader;
+
 public interface ReaderProcedure {
 
   void RL_UR_InitializeContext();
@@ -8,7 +10,7 @@ public interface ReaderProcedure {
 
   void RL_UR_SetupCardReader(String readerName, boolean isContactless, String cardProtocol);
 
-  void RL_UR_IsCardPresent();
+  boolean RL_UR_IsCardPresent();
 
   void RL_UR_SelectCard();
 
@@ -19,4 +21,20 @@ public interface ReaderProcedure {
   void RL_UR_WaitForCardInsertion();
 
   void RL_UR_WaitForCardRemoval();
+
+  void RL_UR_DeActivateSingleObservation();
+
+  void RL_UR_ActivateProtocol(String ReaderProtocol, String CardProtocol);
+  void RL_UR_DeActivateProtocol(String CurrentProtocol);
+  String RL_UR_GetReaderName();
+  boolean RL_UR_IsContactless();
+
+  String RL_UR_GetPowerOnData();
+
+  String RL_UR_SelectApplicationResponse();
+
+  void PrepareReleaseChannel();
+
+  void RL_UR_CardSelection();
+
 }

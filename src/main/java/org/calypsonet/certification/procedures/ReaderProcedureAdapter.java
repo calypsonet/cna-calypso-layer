@@ -2,13 +2,12 @@ package org.calypsonet.certification.procedures;
 
 import org.calypsonet.certification.spi.ReaderApiSpecific;
 import org.calypsonet.certification.spi.ReaderApiSpecificAdapter;
-import org.calypsonet.terminal.reader.CardReader;
-import org.calypsonet.terminal.reader.CardReaderEvent;
-import org.calypsonet.terminal.reader.ObservableCardReader;
+import org.calypsonet.terminal.reader.*;
 import org.calypsonet.terminal.reader.selection.CardSelectionManager;
 import org.calypsonet.terminal.reader.selection.CardSelectionResult;
 import org.calypsonet.terminal.reader.spi.CardReaderObservationExceptionHandlerSpi;
 import org.calypsonet.terminal.reader.spi.CardReaderObserverSpi;
+import org.eclipse.keyple.core.util.ByteArrayUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -77,13 +76,6 @@ public class ReaderProcedureAdapter implements ReaderProcedure, CardReaderObserv
     cardSelectionManager = readerApiSpecific.createCardSelectionManager();
   }
 
-  @Override
-  public void RL_UR_IsCardPresent() {
-    // Check the card presence
-    if (!commonDto.cardReader.isCardPresent()) {
-      throw new IllegalStateException("No card is present in the reader " + commonDto.cardReader.getName());
-    }
-  }
 
   @Override
   public void RL_UR_SelectCard() {
@@ -103,22 +95,18 @@ public class ReaderProcedureAdapter implements ReaderProcedure, CardReaderObserv
   }
 
   @Override
-  public void RL_UR_ActivateSingleObservation() {
+  public void PrepareReleaseChannel() {
+    cardSelectionManager.prepareReleaseChannel();
+  }
 
-    // Prepare the selection by adding the created card selection to the card selection
-    // scenario.
-    cardSelectionManager.prepareSelection(commonDto.cardSelection);
+  @Override
+  public String RL_UR_GetPowerOnData() {
+    return commonDto.smartCard.getPowerOnData();
+  }
 
-    // Schedule the selection scenario.
-    cardSelectionManager.scheduleCardSelectionScenario(
-            (ObservableCardReader) commonDto.cardReader,
-            ObservableCardReader.DetectionMode.SINGLESHOT,
-            ObservableCardReader.NotificationMode.ALWAYS);
-
-    // Create and add an observer
-    ((ObservableCardReader) commonDto.cardReader).setReaderObservationExceptionHandler(this);
-    ((ObservableCardReader) commonDto.cardReader).addObserver(this);
-    ((ObservableCardReader) commonDto.cardReader).startCardDetection(ObservableCardReader.DetectionMode.REPEATING);
+  @Override
+  public String RL_UR_SelectApplicationResponse() {
+    return ByteArrayUtil.toHex(commonDto.smartCard.getSelectApplicationResponse());
   }
 
   @Override
@@ -176,5 +164,84 @@ public class ReaderProcedureAdapter implements ReaderProcedure, CardReaderObserv
       }
     };
   }
+
+  ///////////////////////////////////////////////////////////////////////
+  // org.calypsonet.terminal.reader
+  // Interface CardReader: GetName, IsCardPresent, IsContactless
+  ///////////////////////////////////////////////////////////////////////
+  @Override
+  public String RL_UR_GetReaderName() {
+    return commonDto.cardReader.getName();
+  }
+
+  @Override
+  public boolean RL_UR_IsCardPresent() {
+    // Check the card presence
+    if (!commonDto.cardReader.isCardPresent()) {
+      throw new IllegalStateException("No card is present in the reader " + commonDto.cardReader.getName());
+    }
+    return commonDto.cardReader.isCardPresent();
+  }
+
+  @Override
+  public boolean RL_UR_IsContactless() {
+    // Check if the reader is contactless
+    return commonDto.cardReader.isContactless();
+  }
+
+  ///////////////////////////////////////////////////////////////////////
+
+  ///////////////////////////////////////////////////////////////////////
+  // org.calypsonet.terminal.reader
+  // Interface ConfigurableCardReader: activateProtocol, deactivateProtocol
+  ///////////////////////////////////////////////////////////////////////
+  @Override
+  public void RL_UR_ActivateProtocol(String ReaderProtocol, String CardProtocol) {
+    // Deactivate Protocol
+    ((ConfigurableCardReader)commonDto.cardReader).activateProtocol(ReaderProtocol, CardProtocol);
+  }
+
+  @Override
+  public void RL_UR_DeActivateProtocol(String CurrentProtocol) {
+    // Deactivate Protocol
+    ((ConfigurableCardReader)commonDto.cardReader).deactivateProtocol(CurrentProtocol);
+  }
+  ///////////////////////////////////////////////////////////////////////
+
+
+  // For Observable Readers
+  @Override
+  public void RL_UR_ActivateSingleObservation() {
+
+    // Prepare the selection by adding the created card selection to the card selection
+    // scenario.
+    cardSelectionManager.prepareSelection(commonDto.cardSelection);
+
+    // Schedule the selection scenario.
+    cardSelectionManager.scheduleCardSelectionScenario(
+            (ObservableCardReader) commonDto.cardReader,
+            ObservableCardReader.DetectionMode.SINGLESHOT,
+            ObservableCardReader.NotificationMode.ALWAYS);
+
+    // Create and add an observer
+    ((ObservableCardReader) commonDto.cardReader).setReaderObservationExceptionHandler(this);
+    ((ObservableCardReader) commonDto.cardReader).addObserver(this);
+    ((ObservableCardReader) commonDto.cardReader).startCardDetection(ObservableCardReader.DetectionMode.REPEATING);
+  }
+
+  @Override
+  public void RL_UR_DeActivateSingleObservation() {
+    ((ObservableCardReader) commonDto.cardReader).stopCardDetection();
+  }
+
+  @Override
+  public void RL_UR_CardSelection() {
+
+    // Prepare the selection by adding the created card selection to the card selection
+    // scenario.
+    cardSelectionManager.prepareSelection(commonDto.cardSelection);
+    cardSelectionManager.processCardSelectionScenario(commonDto.cardReader);
+  }
+
 
 }

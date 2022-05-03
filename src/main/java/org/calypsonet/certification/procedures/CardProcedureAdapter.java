@@ -3,10 +3,21 @@ package org.calypsonet.certification.procedures;
 import org.calypsonet.certification.spi.CardApiSpecific;
 import org.calypsonet.certification.spi.CardApiSpecificAdapter;
 import org.calypsonet.certification.util.card.generic.*;
+import org.calypsonet.certification.util.card.generic.GenericCardSelection;
+import org.calypsonet.terminal.calypso.SelectFileControl;
+import org.calypsonet.terminal.calypso.card.CalypsoCardSelection;
+import org.calypsonet.terminal.card.ApduResponseApi;
+import org.calypsonet.terminal.card.CardResponseApi;
+import org.calypsonet.terminal.card.spi.CardSelectorSpi;
+import org.calypsonet.terminal.reader.CardReader;
+import org.eclipse.keyple.core.util.ApduUtil;
+import org.eclipse.keyple.core.util.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 public class CardProcedureAdapter implements CardProcedure {
@@ -19,7 +30,6 @@ public class CardProcedureAdapter implements CardProcedure {
   private List<byte[]> apduResponsesBytes;
   private List<String> apduResponsesHex;
   private CardApiSpecific cardApiSpecific = new CardApiSpecificAdapter();
-
 
   public CardProcedureAdapter(CommonDto commonDto) { this.commonDto = commonDto; }
 
@@ -79,14 +89,28 @@ public class CardProcedureAdapter implements CardProcedure {
   }
 
   @Override
-  public void RL_UC_ProcessApdusToHexStrings(){
+  public List<String> RL_UC_ProcessApdusToHexStrings(){
     apduResponsesHex = genericCardTransactionManager.processApdusToHexStrings();
+    return apduResponsesHex;
   }
 
   @Override
-  public boolean RL_UC_IsApduSuccessful() {
-    return true;//cardResponse.getApduResponses().get(0).isSuccessful();
+  public boolean RL_UC_CheckLastSW(List<String> apduresponse, String expectedstatusword) {
+    String regularExpression = "[0-9a-fA-F]{0}.*" + expectedstatusword + "$";
+    Pattern pattern = Pattern.compile(regularExpression);
+    System.out.println("Regular Expression:" + regularExpression);
+    System.out.println(apduresponse);
+    Matcher expressionMatcher =
+            pattern.matcher(apduresponse.get(0));
+
+    return expressionMatcher.matches();
   }
 
+  @Override
+  public void RL_UC_CreateCardSelectionWithOccurrence(String aid, String occurrence) {
+    GenericCardSelection genericCardSelection = genericExtensionService.createCardSelection();
+    commonDto.cardSelection = genericCardSelection.filterByDfName(aid);
+    commonDto.cardSelection = genericCardSelection.setFileOccurrence(GenericCardSelection.FileOccurrence.valueOf(occurrence));
+   }
 
 }
