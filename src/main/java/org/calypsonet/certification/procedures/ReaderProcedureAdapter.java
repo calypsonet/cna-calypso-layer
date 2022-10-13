@@ -243,5 +243,15 @@ public class ReaderProcedureAdapter implements ReaderProcedure, CardReaderObserv
     cardSelectionManager.processCardSelectionScenario(commonDto.cardReader);
   }
 
+  @Override
+  public void RL_UR_ActivateRemovalProcedure(String RemovalMode) {
+	 // To complete when the API will be available 
+  }
+  
+  @Override
+  public void RL_UR_APDUForRemovalProcedure(byte[] apduCommand); {
+	 // To complete when the API will be available 
+  }
+
 
 }

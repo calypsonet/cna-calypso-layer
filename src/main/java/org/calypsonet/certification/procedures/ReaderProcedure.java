@@ -37,4 +37,8 @@ public interface ReaderProcedure {
 
   void RL_UR_CardSelection();
 
+  void RL_UR_ActivateRemovalProcedure(String RemovalMode);
+  
+  void RL_UR_APDUForRemovalProcedure(byte[] apduCommand);
+
 }
