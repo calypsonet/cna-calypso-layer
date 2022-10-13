@@ -28,7 +28,14 @@ public interface CardProcedure {
 
   boolean RL_UC_CheckLastSW(List<String> apduresponse, String expectedstatusword);
 
+boolean RL_UC_CheckSWInResponsesList(List<String> apduresponse, String expectedstatusword, int i);
+
   void RL_UC_CreateCardSelectionWithOccurrence(String aid, String occurrence);
 
+  List<String> RL_UC_PrepareDefaultAPDUsList();
+  
+  List<String> RL_UC_PrepareDefaultAPDUsListWithCLAto02();
+  
+  boolean RL_UC_CheckReaderCapabilityToAcceptAPDUs(List<String> APDUsList, int WaitingTime);
 
 }

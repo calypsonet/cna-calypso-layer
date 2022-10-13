@@ -90,6 +90,7 @@ public class CardProcedureAdapter implements CardProcedure {
 
   @Override
   public List<String> RL_UC_ProcessApdusToHexStrings(){
+	List<String> apduResponsesHex = new ArrayList<String>();
     apduResponsesHex = genericCardTransactionManager.processApdusToHexStrings();
     return apduResponsesHex;
   }
@@ -107,10 +108,89 @@ public class CardProcedureAdapter implements CardProcedure {
   }
 
   @Override
+public boolean RL_UC_CheckSWInResponsesList(List<String> apduresponse, String expectedstatusword, int i) {
+    String regularExpression = "[0-9a-fA-F]{0}.*" + expectedstatusword + "$";
+    Pattern pattern = Pattern.compile(regularExpression);
+    System.out.println("Regular Expression:" + regularExpression);
+    System.out.println(apduresponse);
+    Matcher expressionMatcher =
+            pattern.matcher(apduresponse.get(i));
+
+    return expressionMatcher.matches();
+  }
+
+
+  @Override
   public void RL_UC_CreateCardSelectionWithOccurrence(String aid, String occurrence) {
     GenericCardSelection genericCardSelection = genericExtensionService.createCardSelection();
     commonDto.cardSelection = genericCardSelection.filterByDfName(aid);
     commonDto.cardSelection = genericCardSelection.setFileOccurrence(GenericCardSelection.FileOccurrence.valueOf(occurrence));
    }
 
+  @Override
+  public List<String> RL_UC_PrepareDefaultAPDUsList() {
+	List<String> defaultAPDUsList = new ArrayList<String>();
+	defaultAPDUsList.add("00B2011400");
+	defaultAPDUsList.add("00B2011C00");
+	defaultAPDUsList.add("00B0840000");
+	defaultAPDUsList.add("00E200184000112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF00");
+	return defaultAPDUsList;
+  }
+  
+    @Override
+  public List<String> RL_UC_PrepareDefaultAPDUsListWithCLAto02() {
+	List<String> defaultAPDUsList = new ArrayList<String>();
+	defaultAPDUsList.add("02B2011400");
+	defaultAPDUsList.add("02B2011C00");
+	defaultAPDUsList.add("02B0840000");
+	defaultAPDUsList.add("02E200184000112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF00112233445566778899AABBCCDDEEFF00");
+	return defaultAPDUsList;
+  }
+  
+  @Override
+  public boolean RL_UC_CheckReaderCapabilityToAcceptAPDUs(List<String> APDUsList, int WaitingTime) {
+	
+	String APDU = "";
+	List<String> apduResponse = new ArrayList<String>();
+	Sting ExpectedSW = "9000";
+	boolean LoopControl = true;
+	
+	if (WaitingTime != 0)
+	{
+		for (int i=0; LoopControl && i < APDUsList.size();i++)
+		{
+			APDU = APDUsList.get(i);
+			RL_UC_PrepareApdu(APDU);
+			apduresponse = RL_UC_ProcessApdusToHexStrings();
+			if (RL_UC_CheckLastSW(apduresponse, ExpectedSW))
+			{
+				return true;
+				RL_UR_WaitMilliSeconds(WaitingTime);
+			}
+			else 
+			{
+				LoopControl = false;
+				return false;
+			}
+		}
+	}
+	else
+	{
+		for (int i=0; i < APDUsList.size();i++)
+		{
+			APDU = APDUsList.get(i);
+			RL_UC_PrepareApdu(APDU);
+		}
+		apduresponse = RL_UC_ProcessApdusToHexStrings();
+		for (int i=0; LoopControl && i < apduresponse.size();i++)
+		{
+			if(RL_UC_CheckSWInResponsesList(apduresponse, ExpectedSW, i))
+				return true;
+			else 
+			{
+				LoopControl = false;
+				return false;
+			}
+		}
+	}
 }
